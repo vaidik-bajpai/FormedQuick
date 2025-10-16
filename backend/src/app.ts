@@ -1,23 +1,20 @@
 import express from 'express';
-import type { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(cors({
+    origin: process.env.CORS_ORIGIN,
+    credentials: true,
+}))
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
-});
+app.use(express.json())
+app.use(express.urlencoded({extended: true}))
+app.use(cookieParser())
 
-app.get('/', (_req: Request, res: Response) => {
-  res.send('Hello from Express with TypeScript!');
-});
+import authRouter from "./routes/auth.routes.js"
 
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).send('Something went wrong!');
-});
+app.use("/api/v1/auth/", authRouter)
 
 export default app;
