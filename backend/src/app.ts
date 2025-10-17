@@ -14,7 +14,10 @@ app.use(express.urlencoded({extended: true}))
 app.use(cookieParser())
 
 import authRouter from "./routes/auth.routes.js"
+import errorHandler from './middlewares/errorHandler.middleware.js';
 
 app.use("/api/v1/auth/", authRouter)
+
+app.use(errorHandler)
 
 export default app;
