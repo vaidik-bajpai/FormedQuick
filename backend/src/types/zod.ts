@@ -12,7 +12,7 @@ export const RegisterSchema = z.object({
     password,
 }).strict();
 
-export const LoginSchema = z.object({
+export const SigninSchema = z.object({
     email,
     password
 }).strict();

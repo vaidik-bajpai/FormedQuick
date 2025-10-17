@@ -1,9 +1,9 @@
 import type { Request, Response } from "express"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { ApiError } from "../utils/ApiError.js"
-import { getZodError, RegisterSchema } from "../types/zod.js"
+import { getZodError, RegisterSchema, SigninSchema } from "../types/zod.js"
 import { StatusCodes } from "http-status-codes"
-import { User } from "../models/auth.model.js"
+import { User, type IUser } from "../models/auth.model.js"
 import { ValidationError } from "../utils/ValidationError.js"
 
 const userRegistration = async (req: Request, res: Response) => {
@@ -37,9 +37,53 @@ const userRegistration = async (req: Request, res: Response) => {
     )
 }
 
-const userSignin = (req: Request, res: Response) => {
-    res.status(200).json(
-        new ApiResponse(200, "response from user signin endpoint", null)
+const userSignin = async (req: Request, res: Response) => {
+    const body = SigninSchema.safeParse(req.body)
+    if(!body.success) {
+        throw new ValidationError(StatusCodes.BAD_REQUEST, "invalid signin credentials", getZodError(body.error.issues))
+    }
+
+    const { email, password } = req.body
+    const user = await User.findOne({ email })
+    if(!user) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, "invalid user credentials")
+    }
+
+    const isPasswordValid = await user.isPasswordCorrect(password)
+    if(!isPasswordValid) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, "invalid user credentials")
+    }
+
+    const [accessToken, refreshToken] = await Promise.all([
+        user.generateAccessToken(),
+        user.generateRefreshToken()
+    ]);
+
+    user.refreshToken = refreshToken
+
+    user.save({ validateBeforeSave: false })
+
+    const safeUser = user.toObject() as Partial<IUser>;
+    delete safeUser.password;
+    delete safeUser.refreshToken;
+
+     const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+        new ApiResponse(
+            200, 
+            "user logged In successfully",
+            {
+                user: {...safeUser, accessToken, refreshToken}, 
+            },
+        )
     )
 }
 

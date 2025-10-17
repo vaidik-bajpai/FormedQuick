@@ -32,10 +32,10 @@ export default function errorHandler(
     }
 
     res.status(500).json({
-        error: {
+        statusCode: 500,
         message:
             getErrorMessage(error) ||
             "An error occurred. Please view logs for more details",
         },
-    });
+    );
 }

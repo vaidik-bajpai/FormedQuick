@@ -3,7 +3,19 @@ import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
 import ms from "ms"
 
-const userSchema = new Schema(
+export interface IUser extends Document {
+    username: string;
+    email: string;
+    password: string;
+    refreshToken?: string; 
+    fullName?: string;
+
+    isPasswordCorrect(password: string): Promise<boolean>;
+    generateAccessToken(): string;
+    generateRefreshToken(): string;
+}
+
+const userSchema = new Schema<IUser>(
     {
         username: {
             type: String,
@@ -68,7 +80,7 @@ userSchema.methods.generateAccessToken = function() {
 
 userSchema.methods.generateRefreshToken = function() {
     const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET
-    const refreshTokenExpiry = process.env.REFERSH_TOKEN_EXPIRY
+    const refreshTokenExpiry = process.env.REFRESH_TOKEN_EXPIRY
     if (!refreshTokenExpiry || !refreshTokenSecret) {
         throw new Error("REFRESH_TOKEN_SECRET or REFRESH_TOKEN_EXPIRY is not defined")
     }
