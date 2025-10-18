@@ -5,6 +5,7 @@ const email = z.email("invalid email address").max(100).trim().toLowerCase();
 const username = z.string().min(2, "name must contain at least 2 characters").max(50, "name is too long").trim();
 const password = z.string().min(8, "password must be at least 8 characters").max(72, "password is too long")
 // .regex(/[a-z]/, "password must contain at least one lowercase letter").regex(/[A-Z]/, "password must contain at least one uppercase letter").regex(/[0-9]/, "password must contain at least one number").regex(/[^a-zA-Z0-9]/, "password must contain at least one special character");
+const prompt = z.string().min(10, "Prompt must be at least 10 characters long").max(500, "Prompt must be at most 500 characters long").nonempty("Prompt is required")
 
 export const RegisterSchema = z.object({
     username,
@@ -20,6 +21,10 @@ export const SigninSchema = z.object({
 export const ParamsSchema = z.object({
     id: z.uuid(),
 });
+
+export const GenerateFormSchema = z.object({
+    prompt,
+}).strict()
 
 export function getZodError(issues: ZodIssue[]): Record<string, string> {
     const errorMap: Record<string, string> = {};

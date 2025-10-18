@@ -14,9 +14,11 @@ app.use(express.urlencoded({extended: true}))
 app.use(cookieParser())
 
 import authRouter from "./routes/auth.routes.js"
+import formRouter from "./routes/forms.routes.js"
 import errorHandler from './middlewares/errorHandler.middleware.js';
 
 app.use("/api/v1/auth/", authRouter)
+app.use("/api/v1/form/", formRouter)
 
 app.use(errorHandler)
 
