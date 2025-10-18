@@ -87,10 +87,29 @@ const userSignin = async (req: Request, res: Response) => {
     )
 }
 
-const userLogout = (req: Request, res: Response) => {
-    res.status(200).json(
-        new ApiResponse(200, "response from user logout endpoint", null)
+const userLogout = async (req: Request, res: Response) => {
+    await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {
+                refreshToken: 1
+            }
+        },
+        {
+            new: true
+        }
     )
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, "user logged out"))
 }
 
 export {
