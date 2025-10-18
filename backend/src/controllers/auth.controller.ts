@@ -5,6 +5,8 @@ import { getZodError, RegisterSchema, SigninSchema } from "../types/zod.js"
 import { StatusCodes } from "http-status-codes"
 import { User, type IUser } from "../models/auth.model.js"
 import { ValidationError } from "../utils/ValidationError.js"
+import jwt from "jsonwebtoken"
+import { getErrorMessage } from "../utils/error.js"
 
 const userRegistration = async (req: Request, res: Response) => {
     const body = RegisterSchema.safeParse(req.body)
@@ -112,8 +114,55 @@ const userLogout = async (req: Request, res: Response) => {
         .json(new ApiResponse(200, "user logged out"))
 }
 
+const refreshToken = async (req: Request, res: Response) => {
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+    if(!incomingRefreshToken) {
+        throw new ApiError(StatusCodes.UNAUTHORIZED, "unauthorised request")
+    }
+
+    try {
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET!)
+        if(typeof decodedToken !== "object" || !("_id" in decodedToken)) {
+            throw new ApiError(StatusCodes.UNAUTHORIZED, "invalid access token")
+        }
+
+        const user = await User.findById(decodedToken?._id)
+        if(!user) {
+            throw new ApiError(StatusCodes.UNAUTHORIZED, "invalid access token")
+        }
+
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+
+        const [accessToken, newRefreshToken] = await Promise.all([
+            user.generateAccessToken(),
+            user.generateRefreshToken()
+        ]);
+        
+        return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", newRefreshToken, options)
+        .json(
+            new ApiResponse(
+                200, 
+                "access token refreshed",
+                {
+                    accessToken,
+                    refreshToken: newRefreshToken
+                }
+            )
+        )
+    } catch (err) {
+        throw new ApiError(StatusCodes.UNAUTHORIZED, getErrorMessage(err) || "invalid access token")
+    }
+}
+
 export {
     userRegistration,
     userSignin,
-    userLogout
+    userLogout,
+    refreshToken
 }
