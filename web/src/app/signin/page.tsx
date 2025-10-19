@@ -8,6 +8,7 @@ import {
     FormItem,
     FormLabel,
     FormMessage, 
+    FormDescription as FDesc
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'  
 import { z } from 'zod'
@@ -16,18 +17,18 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import FormHeader from '@/components/FormHeader'
 import FormDescription from '@/components/FormDescription'
+import { useRouter } from 'next/navigation'
 
 const signinSchema = z.object({
     email: z.email("invalid email address").max(100).trim().toLowerCase(),
-    username: z.string().min(2, "name must contain at least 2 characters").max(50, "name is too long").trim(),
     password: z.string().min(8, "password must be at least 8 characters").max(72, "password is too long")
 })
 
 const page = () => {
+    const router = useRouter();
     const form = useForm<z.infer<typeof signinSchema>>({
         resolver: zodResolver(signinSchema),
         defaultValues: {
-            username: "",
             email: "",
             password: ""
         },
@@ -85,12 +86,25 @@ const page = () => {
                                             <Input type="password" placeholder=". . . . . . . ." className='bg-input text-foreground placeholder:text-muted-foreground focus:ring-ring' {...field} />
                                         </FormControl>
                                         <FormMessage />
+                                        <FDesc>
+                                            Forgot Password?
+                                        </FDesc>
                                     </FormItem>
                                 );
                             }}>
                         </FormField>
                     </div>
-                    <Button variant="default" size="lg" className='mt-2 w-full font-bold bg-foreground text-background'>Register</Button>
+                    <div>
+                        <Button variant="default" size="lg" className='mt-2 w-full font-bold bg-foreground text-background'>Register</Button>
+                        <div className='mt-1 text-center text-foreground/90'>
+                            Don't have an account?  
+                            <span
+                                onClick={() => router.push("/signup")} 
+                                className='text-primary/90 font-semibold underline cursor-pointer hover:text-primary'
+                            >Register
+                            </span>
+                        </div>
+                    </div>
                 </form>
             </Form>
         </div>
