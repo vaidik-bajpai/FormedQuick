@@ -17,6 +17,9 @@ import { Button } from '@/components/ui/button'
 import FormHeader from '@/components/FormHeader'
 import FormDescription from '@/components/FormDescription'
 import { useRouter } from 'next/navigation'
+import axios from "../../api/axiosInstance"
+import { toast } from 'sonner'
+import { AxiosError } from 'axios'
 
 const signinSchema = z.object({
     email: z.email("invalid email address").max(100).trim().toLowerCase(),
@@ -35,8 +38,33 @@ const page = () => {
         },
     })
 
-    function onSubmit(values: z.infer<typeof signinSchema>) {
-        console.log(values)
+    async function onSubmit(values: z.infer<typeof signinSchema>) {
+        try {
+            const response = await axios.post("/auth/register", {
+                ...values
+            })
+
+            const data = response.data
+
+            console.log("user registered successfully", response.data)
+            toast("you have registered successfully")
+            router.push("/signin")
+        } catch(err) {
+            if(err instanceof AxiosError) {
+                const status = err.response?.status;
+
+                switch(status) {
+                    case 401:
+                        toast("unauthorised, please log in again")
+                        router.push("/signin")
+                        break
+                    default:
+                        toast(err.response?.data?.message || "something went wrong, try again later");
+                }
+            } else{
+                toast("something went wrong, try again later")
+            }
+        }
     }
 
     return (

@@ -18,6 +18,9 @@ import { Button } from '@/components/ui/button'
 import FormHeader from '@/components/FormHeader'
 import FormDescription from '@/components/FormDescription'
 import { useRouter } from 'next/navigation'
+import axios from "../../api/axiosInstance"
+import { AxiosError } from 'axios'
+import { toast } from 'sonner'
 
 const signinSchema = z.object({
     email: z.email("invalid email address").max(100).trim().toLowerCase(),
@@ -34,8 +37,40 @@ const page = () => {
         },
     })
 
-    function onSubmit(values: z.infer<typeof signinSchema>) {
+    async function onSubmit(values: z.infer<typeof signinSchema>) {
         console.log(values)
+        try {
+            const response = await axios.post("/auth/signin", {
+                ...values
+            })
+
+            const data = response.data
+
+            console.log("logged in successfully: ", data)
+
+            const user = data.data.user
+
+            localStorage.setItem("formed-quick-access-token", user.accessToken)
+            localStorage.setItem("formed-quick-refresh-token", user.refreshToken)
+
+            toast("you are logged in")
+            router.push("/dashboard")
+        } catch(err) {
+            if(err instanceof AxiosError) {
+                const status = err.response?.status;
+
+                switch(status) {
+                    case 401:
+                        toast("unauthorised, please log in again")
+                        router.push("/signin")
+                        break
+                    default:
+                        toast(err.response?.data?.message || "something went wrong, try again later");
+                }
+            } else{
+                toast("something went wrong, try again later")
+            }
+        }
     }
 
     return (
@@ -95,13 +130,14 @@ const page = () => {
                         </FormField>
                     </div>
                     <div>
-                        <Button variant="default" size="lg" className='mt-2 w-full font-bold bg-foreground text-background'>Register</Button>
+                        <Button variant="default" size="lg" className='mt-2 w-full font-bold bg-foreground text-background'>Sign in</Button>
                         <div className='mt-1 text-center text-foreground/90'>
                             Don't have an account?  
                             <span
                                 onClick={() => router.push("/signup")} 
                                 className='text-primary/90 font-semibold underline cursor-pointer hover:text-primary'
-                            >Register
+                            >
+                                Register
                             </span>
                         </div>
                     </div>
