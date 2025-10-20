@@ -4,6 +4,6 @@ import { generateForm } from "../controllers/forms.controller.js";
 
 const router = Router()
 
-router.route("/generate").get(verifyJWT, generateForm)
+router.route("/generate").post(verifyJWT, generateForm)
 
 export default router;
