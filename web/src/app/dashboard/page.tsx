@@ -1,25 +1,90 @@
+"use client"
+
 import PromptBox from "@/components/PromptBox"
+import { zodResolver } from "@hookform/resolvers/zod"
+import axios from "../../api/axiosInstance"
+import { Controller, useForm } from "react-hook-form"
+import { z } from 'zod'
+import { AxiosError } from "axios"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import FormPreview from "@/components/FormPreview"
+import {  FormSchema } from "@/types/form"
+import { useState } from "react"
+
+const generarteFormSchema = z.object({
+    prompt: z.string().min(10).max(5000)
+})
 
 const page = () => {
+    const router = useRouter()
+    const [formSchema, setFormSchema] = useState<FormSchema>()
+    const [showPreview, setShowPreview] = useState<boolean>(false)
+    const form = useForm<z.infer<typeof generarteFormSchema>>({
+        resolver: zodResolver(generarteFormSchema),
+        defaultValues: {
+            prompt: ""
+        }
+    })
+
+    async function handleGenerateForm(values: z.infer<typeof generarteFormSchema>) {
+        try {
+            const response = await axios.post("/form/generate", {
+                ...values
+            })
+
+            console.log("form schema generated: ", response.data)
+
+            setFormSchema(response.data.data.form)
+            setShowPreview(true)
+
+            form.reset()
+        } catch(err) {
+            if(err instanceof AxiosError) {
+                const status = err.response?.status;
+
+                switch(status) {
+                    case 401:
+                        toast("unauthorised, please log in again")
+                        router.push("/signin")
+                        break
+                    default:
+                        toast(err.response?.data?.message || "something went wrong, try again later");
+                }
+            } else{
+                toast("something went wrong, try again later")
+            }
+        }
+    }
+
+    function onClose() {
+        setShowPreview(false)
+        setFormSchema(undefined)
+    }
+
     return (
-        <div className='grow relative h-full bg-background flex flex-col gap-10 justify-center items-center'>
-            <svg className='w-full h-full absolute z-1' viewBox='0 0 160 90' preserveAspectRatio="none">
-                <g stroke="#bbb" strokeOpacity="0.2" strokeWidth="0.3" fill="none">
-                    <path d="M0,25 C40,20 80,40 160,50" />
-                    <path d="M0,30 C50,22 85,45 160,52" />
-                    <path d="M0,35 C45,25 75,55 160,55" />
-                    <path d="M0,40 C55,30 85,50 160,58" />
-                    <path d="M0,45 C43,35 78,53 160,60" />
-                    <path d="M0,50 C52,33 82,60 160,62" />
-                    <path d="M0,55 C47,37 80,57 160,65" />
-                    <path d="M0,60 C50,40 83,60 160,67" />
-                    <path d="M0,65 C53,38 81,62 160,70" />
-                </g>
-            </svg>
-            <div className="text-4xl z-2 text-foreground">Let's build something <span className="text-primary font-medium">AMAZING</span> today</div>
-            <PromptBox placeholder="What kind of form would you like to create today?" />
+    <form
+        onSubmit={form.handleSubmit(handleGenerateForm)}
+        className='grow relative h-full bg-background flex flex-col gap-10 justify-center items-center'
+    >
+        <div className="text-4xl z-2 text-foreground">
+            Let's build something <span className="text-primary font-medium">AMAZING</span> today
         </div>
-    )
+        <Controller
+            name="prompt"
+            control={form.control}
+            render={({ field }) => (
+                <PromptBox
+                placeholder="What kind of form would you like to create today?"
+                value={field.value}
+                onChange={field.onChange}
+                />
+            )}
+        />
+        {showPreview && formSchema && <FormPreview schema={formSchema} onClick={onClose}/>}
+    </form>
+    );
+
 }
 
 export default page

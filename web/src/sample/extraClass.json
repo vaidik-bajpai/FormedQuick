@@ -1,0 +1,89 @@
+{
+    "form": [
+                {
+                    "title": "Maths Extra Class Enrollment Form",
+                    "description": "Please fill out this form if you would like to enroll in extra maths classes.",
+                    "schema": [
+                        {
+                            "field": "studentName",
+                            "label": "Student Name",
+                            "type": "text",
+                            "required": true,
+                            "validations": {
+                                "minLength": 2,
+                                "maxLength": 100
+                            }
+                        },
+                        {
+                            "field": "studentEmail",
+                            "label": "Student Email",
+                            "type": "email",
+                            "required": true,
+                            "validations": {}
+                        },
+                        {
+                            "field": "gradeLevel",
+                            "label": "Grade Level",
+                            "type": "select",
+                            "required": true,
+                            "selectOptions": [
+                                "9th Grade",
+                                "10th Grade",
+                                "11th Grade",
+                                "12th Grade"
+                            ],
+                            "default": "10th Grade"
+                        },
+                        {
+                            "field": "mathTopic",
+                            "label": "Math Topic of Interest",
+                            "type": "select",
+                            "required": true,
+                            "selectOptions": [
+                                "Algebra",
+                                "Geometry",
+                                "Calculus",
+                                "Statistics",
+                                "Trigonometry",
+                                "Other"
+                            ],
+                            "default": "Algebra"
+                        },
+                        {
+                            "field": "availability",
+                            "label": "Availability (Days of the Week)",
+                            "type": "checkbox",
+                            "required": true,
+                            "selectOptions": [
+                                "Monday",
+                                "Tuesday",
+                                "Wednesday",
+                                "Thursday",
+                                "Friday"
+                            ],
+                            "validations": {}
+                        },
+                        {
+                            "field": "reasonForExtraClass",
+                            "label": "Reason for Needing Extra Class",
+                            "type": "text",
+                            "required": true,
+                            "validations": {
+                                "minLength": 10,
+                                "maxLength": 500
+                            }
+                        },
+                        {
+                            "field": "parentConsent",
+                            "label": "Parental Consent",
+                            "type": "checkbox",
+                            "required": true,
+                            "selectOptions": [
+                                "I confirm that I have parental consent to attend extra maths classes."
+                            ],
+                            "validations": {}
+                        }
+                    ]
+                }
+            ]
+}
