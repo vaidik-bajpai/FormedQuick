@@ -22,7 +22,7 @@ interface FormPageI {
 
 const Page = ({ params }: { params: Promise<FormPageI> }) => {
     const { formID } = use(params)
-    const [prompt, setPrompt] = useState<string>("") 
+    const [prompt, setPrompt] = useState<string>("")
     const searchParams = useSearchParams()
     const recent = searchParams.get("recent") === "true"
 
@@ -31,8 +31,41 @@ const Page = ({ params }: { params: Promise<FormPageI> }) => {
     const [loading, setLoading] = useState(true)
 
     const router = useRouter()
-
     const clearUser = useUserStore((state) => state.clearUser)
+
+    async function handleFormFetch(formID: string) {
+        setLoading(true)
+        try {
+            const response = await axios.get(`/form/get/${formID}`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("form-gen-access-token")}`
+                }
+            })
+            const fetchedForm: FormSchema = response.data.data.form.formSchema
+            setFormSchema(fetchedForm)
+            console.log("Fetched form from server:", fetchedForm)
+        } catch (err) {
+            if (err instanceof AxiosError) {
+                const status = err.response?.status
+                switch (status) {
+                    case 401:
+                        toast("Unauthorized, please log in again")
+                        clearUser()
+                        router.push("/signin")
+                        break
+                    case 404:
+                        toast("Form not found")
+                        break
+                    default:
+                        toast(err.response?.data?.message || "Failed to fetch form")
+                }
+            } else {
+                toast("Something went wrong while fetching the form")
+            }
+        } finally {
+            setLoading(false)
+        }
+    }
 
     useEffect(() => {
         if (recent) {
@@ -41,13 +74,13 @@ const Page = ({ params }: { params: Promise<FormPageI> }) => {
                 setFormSchema(found.schema)
                 setPrompt(found.prompt)
                 console.log('Loaded recent form:', found)
+                setLoading(false)
             } else {
                 console.warn('No recent form found for ID:', formID)
+                handleFormFetch(formID)
             }
-            setLoading(false)
         } else {
-            console.log('Fetch form from backend using formID:', formID)
-            setLoading(false)
+            handleFormFetch(formID)
         }
     }, [recent, formID, recentForms])
 
