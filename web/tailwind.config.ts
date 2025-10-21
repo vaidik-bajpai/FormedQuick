@@ -3,6 +3,17 @@ module.exports = {
   darkMode: 'class',
     theme: {
         extend: {
+            keyframes: {
+                aurora: {
+                '0%, 100%': { 'box-shadow': '0 0 10px #f0f, 0 0 20px #0ff, 0 0 30px #0f0' },
+                '25%': { 'box-shadow': '0 0 20px #0ff, 0 0 30px #0f0, 0 0 40px #f0f' },
+                '50%': { 'box-shadow': '0 0 30px #0f0, 0 0 40px #f0f, 0 0 50px #0ff' },
+                '75%': { 'box-shadow': '0 0 40px #f0f, 0 0 50px #0ff, 0 0 60px #0f0' },
+                }
+            },
+            animation: {
+                aurora: 'aurora 4s ease-in-out infinite',
+            },
             colors: {
                 primary: 'var(--primary)',
                 foreground: 'var(--foreground)',

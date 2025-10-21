@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button'
 import FormHeader from '@/components/FormHeader'
 import FormDescription from '@/components/FormDescription'
 import { useRouter } from 'next/navigation'
-import axios from "../../api/axiosInstance"
+import axios from "../../../api/axiosInstance"
 import { toast } from 'sonner'
 import { AxiosError } from 'axios'
 

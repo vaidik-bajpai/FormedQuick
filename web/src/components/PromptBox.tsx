@@ -5,20 +5,51 @@ interface PromptBoxI {
     onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
     value?: string
     placeholder: string
+    onSubmit?: () => void
 }
 
-const PromptBox = ({onChange, placeholder, value}: PromptBoxI) => {
+const PromptBox = ({onChange, placeholder, value, onSubmit}: PromptBoxI) => {
+    const isTextEntered = value ? value.trim().length > 0 : false;
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            if (isTextEntered) onSubmit?.();
+        }
+    };
+
     return (
-        <div className="z-2 w-2xl rounded-xl p-4 border border-border overflow-hidden bg-card text-card-foreground">
+        <div 
+                className="z-2 w-2xl rounded-xl p-4 border border-border overflow-hidden 
+                    bg-card text-card-foreground ring-primary/50 ring-offset-2 
+                    focus-within:ring-2 transform 
+                    transition-all duration-500 delay-200 ease-in-out
+                "
+        >
             <textarea   
                 rows={5}
                 className="w-full flex items-center border-none outline-none resize-none"
                 placeholder={placeholder}
                 onChange={onChange}
+                onKeyDown={handleKeyDown}
                 value={value}
             />
-            <div className="flex w-full justify-end mt-2">
-                <Button variant="outline" size="icon" type="submit" className="!bg-secondary !text-secondary-foreground">
+            <div className="flex w-full justify-between items-center mt-2">
+                <div className="space-x-2">
+                    <Button className="bg-primary text-primary-foreground font-medium">
+                        My forms
+                    </Button>
+                    <Button className="bg-secondary text-secondary-foreground hover:bg-muted cursor-pointer font-medium">
+                        Recent
+                    </Button>
+                </div>
+                <Button 
+                    variant="outline"
+                    size="icon" 
+                    type="submit" 
+                    className={`!bg-secondary !text-secondary-foreground transition-all delay-200 duration-500 `}
+                    onClick={() => isTextEntered && onSubmit?.()}
+                >
                     <ArrowUpIcon />
                 </Button>
             </div>  

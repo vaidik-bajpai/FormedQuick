@@ -21,7 +21,6 @@ interface FormSchema {
     fields: FormField[];
 }
 
-
 type FieldType =
   | "text"
   | "textarea"
@@ -34,6 +33,21 @@ type FieldType =
   | "email"
   | "file";
 
+interface RecentFormStore {
+    id: string
+    schema: FormSchema
+}
+
+interface RecentFormsState {
+    recentForms: RecentFormStore[]
+    addRecentForm: (form: RecentFormStore) => void
+    removeRecentForm: (id: string) => void
+    clearRecentForms: () => void
+}
+
+
 export type {
-    FormSchema
+    FormSchema,
+    RecentFormStore,
+    RecentFormsState
 }

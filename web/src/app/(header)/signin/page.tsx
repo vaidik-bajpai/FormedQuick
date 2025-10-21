@@ -18,9 +18,10 @@ import { Button } from '@/components/ui/button'
 import FormHeader from '@/components/FormHeader'
 import FormDescription from '@/components/FormDescription'
 import { useRouter } from 'next/navigation'
-import axios from "../../api/axiosInstance"
+import axios from "../../../api/axiosInstance"
 import { AxiosError } from 'axios'
 import { toast } from 'sonner'
+import { useUserStore } from '@/store/user.store'
 
 const signinSchema = z.object({
     email: z.email("invalid email address").max(100).trim().toLowerCase(),
@@ -28,6 +29,9 @@ const signinSchema = z.object({
 })
 
 const page = () => {
+    const setUser = useUserStore((state) => state.setUser);
+    const clearUser = useUserStore((state) => state.clearUser)
+    
     const router = useRouter();
     const form = useForm<z.infer<typeof signinSchema>>({
         resolver: zodResolver(signinSchema),
@@ -54,6 +58,10 @@ const page = () => {
             localStorage.setItem("formed-quick-refresh-token", user.refreshToken)
 
             toast("you are logged in")
+            setUser({
+                username: user.username,
+                email: user.email,
+            })
             router.push("/dashboard")
         } catch(err) {
             if(err instanceof AxiosError) {
@@ -62,6 +70,7 @@ const page = () => {
                 switch(status) {
                     case 401:
                         toast("unauthorised, please log in again")
+                        clearUser()
                         router.push("/signin")
                         break
                     default:
