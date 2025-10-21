@@ -36,6 +36,7 @@ type FieldType =
 interface RecentFormStore {
     id: string
     schema: FormSchema
+    prompt: string
 }
 
 interface RecentFormsState {

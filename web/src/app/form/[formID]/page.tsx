@@ -2,8 +2,8 @@
 
 import { useRecentFormsStore } from '@/store/form.store'
 import { FormSchema } from '@/types/form.types'
-import { useSearchParams } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import React, { use, useEffect, useState } from 'react'
 import FormDescription from '@/components/FormDescription'
 import FormHeader from '@/components/FormHeader'
 import { Input } from '@/components/ui/input'
@@ -11,13 +11,18 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { TextShimmer } from '@/components/ui/text-shimmer'
+import { toast } from 'sonner'
+import { AxiosError } from 'axios'
+import axios from '@/api/axiosInstance'
+import { useUserStore } from '@/store/user.store'
 
 interface FormPageI {
     formID: string
 }
 
-const Page = ({ params }: { params: FormPageI }) => {
-    const { formID } = params
+const Page = ({ params }: { params: Promise<FormPageI> }) => {
+    const { formID } = use(params)
+    const [prompt, setPrompt] = useState<string>("") 
     const searchParams = useSearchParams()
     const recent = searchParams.get("recent") === "true"
 
@@ -25,22 +30,60 @@ const Page = ({ params }: { params: FormPageI }) => {
     const [formSchema, setFormSchema] = useState<FormSchema | null>(null)
     const [loading, setLoading] = useState(true)
 
+    const router = useRouter()
+
+    const clearUser = useUserStore((state) => state.clearUser)
+
     useEffect(() => {
         if (recent) {
             const found = recentForms.find((form) => form.id === formID)
             if (found) {
                 setFormSchema(found.schema)
+                setPrompt(found.prompt)
                 console.log('Loaded recent form:', found)
             } else {
                 console.warn('No recent form found for ID:', formID)
             }
             setLoading(false)
         } else {
-            // TODO: fetch from backend
             console.log('Fetch form from backend using formID:', formID)
             setLoading(false)
         }
     }, [recent, formID, recentForms])
+
+    async function handleSave(prompt: string, form: FormSchema) {
+        console.log("handle save called: ", prompt, formSchema)
+        try {
+            const response = await axios.post("/form/save", {
+                prompt, 
+                form
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("form-gen-access-token")}`
+                    }
+                }
+            )
+
+            toast("form created successfully")
+            router.push(`/forms/${response.data.data.formID}`)
+        } catch(err) {
+            if(err instanceof AxiosError) {
+                const status = err.response?.status;
+
+                switch(status) {
+                    case 401:
+                        toast("unauthorised, please log in again")
+                        clearUser()
+                        router.push("/signin")
+                        break
+                    default:
+                        toast(err.response?.data?.message || "something went wrong, try again later");
+                }
+            } else{
+                toast("something went wrong, try again later")
+            }
+        }
+    }
 
     if (loading) {
         return (
@@ -189,10 +232,11 @@ const Page = ({ params }: { params: FormPageI }) => {
                 <div className='text-center text-sm mt-2 text-card-foreground'>Powered By: <span className='font-bold cursor-pointer hover:underline'>Formed<span className='text-primary'>Quick</span></span></div>
             </form>
 
-            {recent && <div className="flex justify-end w-5xl px-4 mt-4 space-x-4">
+            {recent && <div className="flex z-2 justify-end w-5xl px-4 mt-4 space-x-4">
                 <Button
                     size="lg"
                     className="bg-primary text-primary-foreground font-semibold"
+                    onClick={() => handleSave(prompt, formSchema)}
                 >
                     Save
                 </Button>

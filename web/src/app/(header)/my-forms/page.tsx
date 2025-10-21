@@ -20,6 +20,7 @@ const page = () => {
     const recentForms = useRecentFormsStore((state) => state.recentForms)
     const removeRecentForm = useRecentFormsStore((state) => state.removeRecentForm)
     const router = useRouter()
+
     return (
         <div className="grow flex">
             <div className="w-5xl mx-auto">

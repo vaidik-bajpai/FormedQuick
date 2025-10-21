@@ -4,6 +4,11 @@ import { ExternalLink, X } from "lucide-react";
 import { TextShimmer } from "./ui/text-shimmer";
 import { useRouter } from 'next/navigation'
 import FormRenderer from "./FormRenderer";
+import { useRecentFormsStore } from "@/store/form.store";
+import axios from "../api/axiosInstance";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
+import { useUserStore } from "@/store/user.store";
 
 interface FormPreviewProps {
     id: string
@@ -14,6 +19,45 @@ interface FormPreviewProps {
 
 const FormPreview = ({ id, schema, onClick, loading }: FormPreviewProps) => {
     const router = useRouter()
+    const recentForms = useRecentFormsStore((state) => state.recentForms)
+    const clearUser = useUserStore((state) => state.clearUser)
+    const prompt = recentForms.find((form) => form.id === id)?.prompt
+    if(!prompt) {
+        return null
+    }
+
+    async function handleSave(prompt: string, form: FormSchema) {
+        try {
+            const response = await axios.post("/form/save", {
+                prompt, 
+                form
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("form-gen-access-token")}`
+                    }
+                }
+            )
+
+            toast("form created successfully")
+            router.push(`/forms/${response.data.data.formID}`)
+        } catch(err) {
+            if(err instanceof AxiosError) {
+                const status = err.response?.status;
+
+                switch(status) {
+                    case 401:
+                        toast("unauthorised, please log in again")
+                        clearUser()
+                        router.push("/signin")
+                        break
+                    default:
+                        toast(err.response?.data?.message || "something went wrong, try again later");
+                }
+            } else{
+                toast("something went wrong, try again later")
+            }
+        }
+    }
 
     return (
         <div className="fixed inset-0 flex flex-col justify-center items-center z-3 backdrop-blur">
@@ -47,6 +91,7 @@ const FormPreview = ({ id, schema, onClick, loading }: FormPreviewProps) => {
                             <Button
                                 size="lg"
                                 className="bg-primary text-primary-foreground font-semibold"
+                                onClick={() => handleSave(prompt, schema)}
                             >
                                 Save
                             </Button>

@@ -55,7 +55,8 @@ const page = () => {
             setShowPreview(true)
             addRecentForm({
                 id: randomID,
-                schema: response.data.data.form
+                schema: response.data.data.form,
+                prompt: response.data.data.prompt,
             })
 
             form.reset()
