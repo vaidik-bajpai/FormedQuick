@@ -1,14 +1,49 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-interface IForm {
-  user: mongoose.Types.ObjectId;         
-  title: string;                         
-  description?: string;                  
-  schema: Record<string, any>;           
-  publicId: string;                      
-  isPublic: boolean;                     
-  tags?: string[];                       
-  submissionCount: number;               
+type FieldType =
+  | "text"
+  | "textarea"
+  | "number"
+  | "date"
+  | "select"
+  | "radio"
+  | "checkbox"
+  | "tags"
+  | "email"
+  | "file";
+
+interface ValidationRules {
+  minLength?: number;
+  maxLength?: number;
+}
+
+interface FormField {
+  name: string;
+  label: string;
+  type: FieldType;
+  placeholder: string;
+  required: boolean;
+  defaultValue?: any;
+  helpText?: string;
+  options?: string[];
+  validations?: ValidationRules;
+}
+
+interface FormSchema {
+  title: string;
+  description?: string;
+  fields: FormField[];
+}
+
+export interface IForm extends Document {
+  user: mongoose.Types.ObjectId;
+  title: string;
+  description?: string;
+  formSchema: FormSchema; // now stored as Mixed
+  publicId: string;
+  isPublic: boolean;
+  tags?: string[];
+  submissionCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,8 +66,9 @@ const formSchema = new Schema<IForm>(
       default: "",
       trim: true,
     },
-    schema: {
-      type: Schema.Types.Mixed, 
+    // Use Mixed type for dynamic nested object
+    formSchema: {
+      type: Schema.Types.Mixed,
       required: true,
     },
     publicId: {

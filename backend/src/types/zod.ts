@@ -37,3 +37,50 @@ export function getZodError(issues: ZodIssue[]): Record<string, string> {
 
     return errorMap
 }
+
+const FieldTypeEnum = z.enum([
+    "text",
+    "textarea",
+    "number",
+    "date",
+    "select",
+    "radio",
+    "checkbox",
+    "tags",
+    "email",
+    "file",
+]);
+
+const ValidationRulesSchema = z.object({
+  minLength: z.number().optional(),
+  maxLength: z.number().optional(),
+}).catchall(z.any());;
+
+const FormFieldSchema = z.object({
+    name: z.string(),
+    label: z.string(),
+    type: FieldTypeEnum,
+    placeholder: z.string(),
+    required: z.boolean(),
+    defaultValue: z.any().optional(),
+    helpText: z.string().optional(),
+    options: z.array(z.string()).optional(),
+    validations: ValidationRulesSchema,
+});
+
+const FormSchemaZod = z.object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().optional(),
+    fields: z.array(FormFieldSchema).nonempty("Form must have at least one field"),
+});
+
+const FormPayloadSchema = z.object({
+    prompt: z.string().min(1, "Prompt is required"),
+    form: FormSchemaZod,
+});
+
+export {
+    FormFieldSchema,
+    FormSchemaZod,
+    FormPayloadSchema,
+};
