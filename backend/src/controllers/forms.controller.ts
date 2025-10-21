@@ -82,15 +82,35 @@ const listForms = async (req: Request, res: Response) => {
         );
     } catch (err) {
         console.error(err);
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-            message: "Failed to fetch forms",
-        });
+        throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "failed to fetch the forms")
     }
 }; 
 
+const getForm = async (req: Request, res: Response) => {
+    const { formID } = req.params;
+
+    try {
+        const form = await Form.findOne({ publicId: formID }).lean()
+        if (!form) {
+            throw new ApiError(StatusCodes.NOT_FOUND, "Form not found");
+        }
+
+        console.log("form fetched successfully:", form);
+
+        res.status(StatusCodes.OK).json(
+            new ApiResponse(StatusCodes.OK, "form data fetched successfully", {
+                form,                    
+            })
+        )
+    } catch (err) {
+        console.log(err)
+        throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "failed to get the form")
+    }
+}
 
 export {
     generateForm,
     saveForm,
-    listForms
+    listForms,
+    getForm
 }
