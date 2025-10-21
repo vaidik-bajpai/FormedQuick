@@ -1,3 +1,4 @@
+import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import { ArrowUpIcon } from "lucide-react";
 
@@ -18,6 +19,8 @@ const PromptBox = ({onChange, placeholder, value, onSubmit}: PromptBoxI) => {
         }
     };
 
+    const router = useRouter()
+
     return (
         <div 
                 className="z-2 w-2xl rounded-xl p-4 border border-border overflow-hidden 
@@ -35,14 +38,9 @@ const PromptBox = ({onChange, placeholder, value, onSubmit}: PromptBoxI) => {
                 value={value}
             />
             <div className="flex w-full justify-between items-center mt-2">
-                <div className="space-x-2">
-                    <Button className="bg-primary text-primary-foreground font-medium">
-                        My forms
-                    </Button>
-                    <Button className="bg-secondary text-secondary-foreground hover:bg-muted cursor-pointer font-medium">
-                        Recent
-                    </Button>
-                </div>
+                <Button className="bg-primary text-primary-foreground font-medium" onClick={() => router.push("/my-forms")}>
+                    My forms
+                </Button>
                 <Button 
                     variant="outline"
                     size="icon" 
