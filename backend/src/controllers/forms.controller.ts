@@ -54,7 +54,43 @@ const saveForm = async (req: Request, res: Response) => {
     }
 }
 
+const listForms = async (req: Request, res: Response) => {
+    try {
+        const user = req.user;
+
+        const page = parseInt(req.query.page as string) || 1;
+        const pageSize = parseInt(req.query.pageSize as string) || 10;
+
+        const totalForms = await Form.countDocuments({ user: user._id });
+
+        const forms = await Form.find({ user: user._id })
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * pageSize)
+            .limit(pageSize)
+            .lean();
+
+        res.status(StatusCodes.OK).json(
+            new ApiResponse(StatusCodes.OK, "forms fetched successfully", {
+                forms,
+                meta: {
+                    total: totalForms,
+                    page,
+                    pageSize,
+                    totalPages: Math.ceil(totalForms / pageSize),
+                },
+            })
+        );
+    } catch (err) {
+        console.error(err);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            message: "Failed to fetch forms",
+        });
+    }
+}; 
+
+
 export {
     generateForm,
-    saveForm
+    saveForm,
+    listForms
 }
