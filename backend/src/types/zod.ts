@@ -60,7 +60,7 @@ const FormFieldSchema = z.object({
     name: z.string(),
     label: z.string(),
     type: FieldTypeEnum,
-    placeholder: z.string(),
+    placeholder: z.string().optional(),
     required: z.boolean(),
     defaultValue: z.any().optional(),
     helpText: z.string().optional(),

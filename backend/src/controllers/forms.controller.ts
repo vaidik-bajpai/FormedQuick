@@ -1,11 +1,12 @@
 import type { Request, Response } from "express";
-import { FormPayloadSchema, FormSchemaZod, GenerateFormSchema } from "../types/zod.js";
+import { FormPayloadSchema, FormSchemaZod, GenerateFormSchema, getZodError } from "../types/zod.js";
 import { ApiError } from "../utils/ApiError.js";
 import { StatusCodes } from "http-status-codes";
 import { generateJSONSchemaFromPrompt } from "../services/gemini.service.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Form } from "../models/forms.model.js";
 import mongoose from "mongoose";
+import { ValidationError } from "../utils/ValidationError.js";
 
 const generateForm = async (req: Request, res: Response) => {
     const body = GenerateFormSchema.safeParse(req.body)
@@ -24,7 +25,7 @@ const generateForm = async (req: Request, res: Response) => {
 const saveForm = async (req: Request, res: Response) => {
     const safe = FormPayloadSchema.safeParse(req.body)
     if (!safe.success) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, "invalid request body")
+        throw new ValidationError(StatusCodes.BAD_REQUEST, "invalid request body", getZodError(safe.error.issues))
     }
 
     const { prompt, form } = safe.data
