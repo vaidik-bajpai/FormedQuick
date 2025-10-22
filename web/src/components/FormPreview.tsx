@@ -95,7 +95,7 @@ const FormPreview = ({ id, schema, onClick, loading }: FormPreviewProps) => {
                             </Button>
                         </div>
 
-                        <FormRenderer schema={schema}/>
+                        <FormRenderer formID={id} schema={schema}/>
 
                         <div className="flex justify-end w-5xl px-4 mt-2 space-x-4">
                             <Button

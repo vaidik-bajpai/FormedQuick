@@ -1,8 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { FormSchema } from '@/types/form.types'
 import FormHeader from '@/components/FormHeader'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import FormDescription from './FormDescription'
 import { Button } from './ui/button'
@@ -11,16 +10,27 @@ import { Label } from './ui/label'
 import { buildZodSchema } from "@/lib/zod.lib";
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import axios from '../api/axiosInstance'
+import z from 'zod'
+import { toast } from 'sonner'
+import { AxiosError } from 'axios'
+import { useUserStore } from '@/store/user.store'
+import { useRouter } from 'next/navigation'
 
 interface FormRendererI {
+    formID: string
     schema: FormSchema
     className?: string
     readOnly?: boolean
 }
 
-const FormRenderer = ({ schema, className, readOnly }: FormRendererI) => {
+const FormRenderer = ({ formID, schema, className, readOnly }: FormRendererI) => {
     const zodSchema = React.useMemo(() => buildZodSchema(schema), [schema]);
-
+    const [loading, setLoading] = useState<boolean>(false);
+    const [responseSubmitted, setResponseSubmitted] = useState<boolean>(false);
+    const clearUser = useUserStore((state) => state.clearUser)
+    const router = useRouter()
+    
     const form = useForm({
         resolver: !readOnly ? zodResolver(zodSchema) : undefined,
         mode: "onSubmit",
@@ -32,20 +42,50 @@ const FormRenderer = ({ schema, className, readOnly }: FormRendererI) => {
         formState: { errors },
     } = form;
 
-    const onSubmit = React.useCallback((data: any, event?: React.BaseSyntheticEvent) => {
-        event?.preventDefault(); // ✅ Always prevent default browser reload
+    const onSubmit = async (values: z.infer<typeof zodSchema>) => {
+        console.log("form submissions was called")
+        setLoading(true)
         try {
-            if (readOnly) return;
-            console.log("✅ Form submitted successfully:", data);
-        } catch (err) {
-            console.error("❌ Form submission error:", err);
+            const response = await axios.post(`/submissions/submit/${formID}`, {
+                ...values
+            }, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("form-gen-access-token")}`,
+                    "Content-Type": "multipart/form-data"
+                }
+            })
+
+            console.log(response.data)
+            setResponseSubmitted(true)
+            toast("your response has been submitted")
+        } catch(err) {
+            if (err instanceof AxiosError) {
+                const status = err.response?.status
+                switch (status) {
+                    case 401:
+                        toast("Unauthorized, please log in again")
+                        clearUser()
+                        router.push("/signin")
+                        break
+                    case 404:
+                        toast("Form not found")
+                        break
+                    default:
+                        toast(err.response?.data?.message || "Failed to fetch form")
+                }
+            } else {
+                toast("Something went wrong while fetching the form")
+            }
+        } finally {
+            setLoading(false)
         }
-    }, [readOnly]);
+        
+    }
 
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
-            className={`w-full max-w-5xl bg-card border border-border rounded-xl p-6 flex flex-col gap-4 text-foreground max-h-[80%] overflow-y-auto ${className}`}
+            className={`z-2 w-full max-w-5xl bg-card border border-border rounded-xl p-6 flex flex-col gap-4 text-foreground max-h-[80%] overflow-y-auto ${className}`}
         >
             <div className="mb-4">
                 <FormHeader headerText={schema.title} />
@@ -153,7 +193,7 @@ const FormRenderer = ({ schema, className, readOnly }: FormRendererI) => {
             })}
 
             {!readOnly && (
-                <Button type="submit" size="lg" className="bg-secondary text-secondary-foreground font-bold">
+                <Button type="submit" size="lg" disabled={loading} className="bg-secondary text-secondary-foreground font-bold">
                     Submit
                 </Button>
             )}
