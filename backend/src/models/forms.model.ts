@@ -15,6 +15,7 @@ type FieldType =
 interface ValidationRules {
   minLength?: number;
   maxLength?: number;
+  regex?: string
 }
 
 interface FormField {
@@ -29,7 +30,7 @@ interface FormField {
   validations?: ValidationRules;
 }
 
-interface FormSchema {
+export interface FormSchema {
   title: string;
   description?: string;
   fields: FormField[];
