@@ -98,7 +98,7 @@ const Page = ({ params }: { params: Promise<FormPageI> }) => {
             )
 
             toast("form created successfully")
-            router.push(`/forms/${response.data.data.formID}`)
+            router.push(`/form/${response.data.data.formID}`)
         } catch(err) {
             if(err instanceof AxiosError) {
                 const status = err.response?.status;

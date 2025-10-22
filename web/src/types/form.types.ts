@@ -1,4 +1,5 @@
 interface ValidationRules {
+    regex: string | undefined;
     minLength?: number;
     maxLength?: number;
 }
@@ -44,6 +45,9 @@ interface RecentFormsState {
     addRecentForm: (form: RecentFormStore) => void
     removeRecentForm: (id: string) => void
     clearRecentForms: () => void
+
+    rehydrated: boolean;
+    setRehydrated: (v: boolean) => void;
 }
 
 

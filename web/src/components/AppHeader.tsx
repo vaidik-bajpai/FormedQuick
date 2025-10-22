@@ -14,7 +14,7 @@ const AppHeader = () => {
     return (
         <h1 className='flex-none sticky top-0 left-0 py-4 px-12 w-full bg-background border-b border-border'>
             <div className='mx-auto flex justify-between items-center'>
-                <div className='text-3xl text-foreground'>Formed<span className='font-bold text-primary'>Quick</span></div>
+                <div className='text-3xl text-foreground cursor-pointer hover:scale-105 transition-all delay-100 duration-500' onClick={() => router.push("/dashboard")}>Formed<span className='font-bold text-primary'>Quick</span></div>
                 {
                     user ? 
                         <div className='flex gap-4 items-center'>
@@ -33,6 +33,7 @@ const AppHeader = () => {
                                     <DropdownMenuItem onClick={() => router.push("/dashboard")}>Generate</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => router.push("/my-forms/active=true")}> My forms</DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => router.push("/my-forms/recents=true")}>Recent forms</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => router.push("/my-forms/recents=true")}>Log out</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>

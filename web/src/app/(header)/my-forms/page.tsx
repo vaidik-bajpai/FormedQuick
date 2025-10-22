@@ -10,6 +10,7 @@ import FormCard from "@/components/FormCard"
 import { toast } from "sonner"
 import { AxiosError } from "axios"
 import { FormSchema } from "@/types/form.types"
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 
 const PAGE_SIZE = 5
 interface ActiveForm {
@@ -113,12 +114,12 @@ const Page = () => {
                         <AccordionTrigger className="text-xl cursor-pointer font-medium hover:text-primary">
                             Active ({totalActiveForms})
                         </AccordionTrigger>
-                        <AccordionContent className="flex flex-col gap-2">
+                        <AccordionContent className="flex justify-center flex-wrap gap-2">
                             {loadingActive ? (
                                 <div>Loading active forms...</div>
                             ) : activeForms.length > 0 ? (
                                 <>
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="flex justify-center flex-wrap gap-2">
                                         {activeForms.map((form) => (
                                             <ContextMenu key={form._id}>
                                                 <ContextMenuTrigger>
@@ -137,24 +138,58 @@ const Page = () => {
                                     </div>
 
                                     {totalPages > 1 && (
-                                        <div className="flex justify-center gap-2 mt-4">
-                                            <button
-                                                disabled={currentPage === 1}
-                                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                                className="px-3 py-1 border rounded"
-                                            >
-                                                Prev
-                                            </button>
-                                            <span className="px-3 py-1">{currentPage} / {totalPages}</span>
-                                            <button
-                                                disabled={currentPage === totalPages}
-                                                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                                className="px-3 py-1 border rounded"
-                                            >
-                                                Next
-                                            </button>
-                                        </div>
+                                        <Pagination>
+                                            <PaginationContent className="justify-center mt-4">
+                                                {/* Previous */}
+                                                <PaginationItem>
+                                                    <PaginationPrevious
+                                                        href="#"
+                                                        onClick={(e) => {
+                                                            e.preventDefault()
+                                                            if (currentPage > 1) setCurrentPage((p) => p - 1)
+                                                        }}
+                                                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                                                    />
+                                                </PaginationItem>
+
+                                                {/* Page Numbers */}
+                                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                                                    <PaginationItem key={pageNum}>
+                                                        <PaginationLink
+                                                            href="#"
+                                                            onClick={(e) => {
+                                                                e.preventDefault()
+                                                                setCurrentPage(pageNum)
+                                                            }}
+                                                            isActive={currentPage === pageNum}
+                                                        >
+                                                            {pageNum}
+                                                        </PaginationLink>
+                                                    </PaginationItem>
+                                                ))}
+
+                                                {/* Ellipsis (if many pages) */}
+                                                {totalPages > 5 && currentPage < totalPages - 2 && (
+                                                    <PaginationItem>
+                                                        <PaginationEllipsis />
+                                                    </PaginationItem>
+                                                )}
+
+                                                {/* Next */}
+                                                <PaginationItem>
+                                                    <PaginationNext
+                                                        href="#"
+                                                        onClick={(e) => {
+                                                            e.preventDefault()
+                                                            if (currentPage < totalPages) setCurrentPage((p) => p + 1)
+                                                        }}
+                                                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                                                    />
+                                                </PaginationItem>
+                                            </PaginationContent>
+                                        </Pagination>
                                     )}
+
                                 </>
                             ) : (
                                 <div>You don't have any saved forms</div>

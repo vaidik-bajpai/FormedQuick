@@ -9,6 +9,8 @@ import axios from "../api/axiosInstance";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 import { useUserStore } from "@/store/user.store";
+import { useState } from "react";
+import CoverScreenModal from "./CoverScreenModal";
 
 interface FormPreviewProps {
     id: string
@@ -18,6 +20,7 @@ interface FormPreviewProps {
 }
 
 const FormPreview = ({ id, schema, onClick, loading }: FormPreviewProps) => {
+    const [saving, setSaving] = useState(false)
     const router = useRouter()
     const recentForms = useRecentFormsStore((state) => state.recentForms)
     const clearUser = useUserStore((state) => state.clearUser)
@@ -27,6 +30,7 @@ const FormPreview = ({ id, schema, onClick, loading }: FormPreviewProps) => {
     }
 
     async function handleSave(prompt: string, form: FormSchema) {
+        setSaving(true)
         try {
             const response = await axios.post("/form/save", {
                 prompt, 
@@ -38,9 +42,11 @@ const FormPreview = ({ id, schema, onClick, loading }: FormPreviewProps) => {
                 }
             )
 
+            setSaving(false)
             toast("form created successfully")
-            router.push(`/forms/${response.data.data.formID}`)
+            router.push(`/form/${response.data.data.formID}`)
         } catch(err) {
+            setSaving(false)
             if(err instanceof AxiosError) {
                 const status = err.response?.status;
 
@@ -57,6 +63,10 @@ const FormPreview = ({ id, schema, onClick, loading }: FormPreviewProps) => {
                 toast("something went wrong, try again later")
             }
         }
+    }
+
+    if(saving) {
+        return <CoverScreenModal text="Saving form..."/>
     }
 
     return (
@@ -92,6 +102,7 @@ const FormPreview = ({ id, schema, onClick, loading }: FormPreviewProps) => {
                                 size="lg"
                                 className="bg-primary text-primary-foreground font-semibold"
                                 onClick={() => handleSave(prompt, schema)}
+                                disabled={saving}
                             >
                                 Save
                             </Button>

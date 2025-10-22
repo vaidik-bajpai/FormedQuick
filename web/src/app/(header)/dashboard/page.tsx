@@ -52,13 +52,12 @@ const page = () => {
 
             setID(randomID)
             setFormSchema(response.data.data.form)
-            setShowPreview(true)
             addRecentForm({
                 id: randomID,
                 schema: response.data.data.form,
                 prompt: response.data.data.prompt,
             })
-
+            setShowPreview(true)
             form.reset()
         } catch(err) {
             if(err instanceof AxiosError) {

@@ -38,14 +38,14 @@ const PromptBox = ({onChange, placeholder, value, onSubmit}: PromptBoxI) => {
                 value={value}
             />
             <div className="flex w-full justify-between items-center mt-2">
-                <Button className="bg-primary text-primary-foreground font-medium" onClick={() => router.push("/my-forms")}>
+                <Button className="bg-primary text-primary-foreground font-medium cursor-pointer" onClick={() => router.push("/my-forms")}>
                     My forms
                 </Button>
                 <Button 
                     variant="outline"
                     size="icon" 
                     type="submit" 
-                    className={`!bg-secondary !text-secondary-foreground transition-all delay-200 duration-500 `}
+                    className={`!bg-secondary !text-secondary-foreground transition-all delay-200 duration-500 cursor-pointer`}
                     onClick={() => isTextEntered && onSubmit?.()}
                 >
                     <ArrowUpIcon />
