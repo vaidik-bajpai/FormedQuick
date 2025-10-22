@@ -37,10 +37,7 @@ const PromptBox = ({onChange, placeholder, value, onSubmit}: PromptBoxI) => {
                 onKeyDown={handleKeyDown}
                 value={value}
             />
-            <div className="flex w-full justify-between items-center mt-2">
-                <Button className="bg-primary text-primary-foreground font-medium cursor-pointer" onClick={() => router.push("/my-forms")}>
-                    My forms
-                </Button>
+            <div className="flex w-full justify-end items-center mt-2">
                 <Button 
                     variant="outline"
                     size="icon" 

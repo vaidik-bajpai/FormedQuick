@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation'
 import { useUserStore } from '@/store/user.store'
 import { Menu } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
+import { useLogout } from '@/hooks/useLogout'
 
 const AppHeader = () => {
     const router = useRouter();
     const user = useUserStore((state) => state.user)
+    const logout = useLogout()
 
     return (
         <h1 className='flex-none sticky top-0 left-0 py-4 px-12 w-full bg-background border-b border-border'>
@@ -31,9 +33,9 @@ const AppHeader = () => {
                                     <DropdownMenuLabel>Main menu</DropdownMenuLabel>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => router.push("/dashboard")}>Generate</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => router.push("/my-forms/active=true")}> My forms</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => router.push("/my-forms/recents=true")}>Recent forms</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => router.push("/my-forms/recents=true")}>Log out</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => router.push("/my-forms?active=true")}> My forms</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => router.push("/my-forms?recents=true")}>Recent forms</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>

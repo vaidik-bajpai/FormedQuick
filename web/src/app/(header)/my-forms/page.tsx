@@ -2,7 +2,7 @@
 
 import { useRecentFormsStore } from "@/store/form.store"
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import axios from "@/api/axiosInstance"
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem } from "@/components/ui/context-menu"
@@ -11,13 +11,16 @@ import { toast } from "sonner"
 import { AxiosError } from "axios"
 import { FormSchema } from "@/types/form.types"
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
+import { Copy, CopyCheck } from "lucide-react"
 
 const PAGE_SIZE = 5
+
 interface ActiveForm {
     _id: string
     title: string
     description: string
     formSchema: FormSchema
+    prompt: string
     publicId: string
     createdAt: string
 }
@@ -42,8 +45,11 @@ const Page = () => {
     const [totalActiveForms, setTotalActiveForms] = useState(0)
     const [currentPage, setCurrentPage] = useState(1)
     const [loadingActive, setLoadingActive] = useState(true)
+    const [openAccordion, setOpenAccordion] = useState<string[]>([])
+    const [copiedItem, setCopiedItem] = useState<string | null>(null)
 
     const router = useRouter()
+    const searchParams = useSearchParams()
 
     const fetchActiveForms = async (page: number = 1) => {
         setLoadingActive(true)
@@ -56,7 +62,6 @@ const Page = () => {
             })
 
             const { forms, meta } = response.data.data
-
             setActiveForms(forms)
             setTotalActiveForms(meta.total)
         } catch (err) {
@@ -74,14 +79,46 @@ const Page = () => {
         fetchActiveForms(currentPage)
     }, [currentPage])
 
+    useEffect(() => {
+        const activeParam = searchParams.get("active")
+        const recentParam = searchParams.get("recents")
+
+        if (activeParam === "true") {
+            setOpenAccordion(["item-2"])
+            const element = document.getElementById("active-section")
+            if (element) element.scrollIntoView({ behavior: "smooth" })
+        } else if (recentParam === "true") {
+            setOpenAccordion(["item-1"])
+            const element = document.getElementById("recent-section")
+            if (element) element.scrollIntoView({ behavior: "smooth" })
+        } else {
+            setOpenAccordion([])
+        }
+    }, [searchParams])
+
+    const handleCopy = async (content: string, label: string, id: string) => {
+        try {
+            await navigator.clipboard.writeText(content)
+            setCopiedItem(`${id}-${label}`)
+            toast(`${label === "json" ? "JSON data" : "Prompt"} copied to clipboard!`)
+            setTimeout(() => setCopiedItem(null), 1500)
+        } catch (error) {
+            toast("Failed to copy content")
+        }
+    }
+
     const totalPages = Math.ceil(totalActiveForms / PAGE_SIZE)
 
     return (
         <div className="grow flex">
             <div className="w-5xl mx-auto">
-                <Accordion type="multiple">
+                <div className="text-2xl my-2 font-semibold bg-card text-foreground border-b py-3 border-border">
+                    <h1>My forms</h1>
+                </div>
+
+                <Accordion type="multiple" value={openAccordion} onValueChange={setOpenAccordion}>
                     {/* Recent Forms */}
-                    <AccordionItem value="item-1">
+                    <AccordionItem value="item-1" id="recent-section">
                         <AccordionTrigger className="text-xl cursor-pointer font-medium hover:text-primary">
                             Recents ({recentForms.length}/5)
                         </AccordionTrigger>
@@ -98,8 +135,40 @@ const Page = () => {
                                             </div>
                                         </ContextMenuTrigger>
                                         <ContextMenuContent>
-                                            <ContextMenuItem onClick={() => router.push(`/form/${form.id}?recent=true`)}>View</ContextMenuItem>
-                                            <ContextMenuItem onClick={() => removeRecentForm(form.id)}>Delete</ContextMenuItem>
+                                            <ContextMenuItem onClick={() => router.push(`/form/${form.id}?recent=true`)}>
+                                                View
+                                            </ContextMenuItem>
+                                            <ContextMenuItem onClick={() => removeRecentForm(form.id)}>
+                                                Delete
+                                            </ContextMenuItem>
+
+                                            <ContextMenuItem
+                                                onClick={() =>
+                                                    handleCopy(JSON.stringify(form.schema, null, 2), "json", form.id)
+                                                }
+                                                className="flex justify-between items-center"
+                                            >
+                                                Copy JSON
+                                                {copiedItem === `${form.id}-json` ? (
+                                                    <CopyCheck size={16} className="text-green-500" />
+                                                ) : (
+                                                    <Copy size={16} className="text-muted-foreground" />
+                                                )}
+                                            </ContextMenuItem>
+
+                                            <ContextMenuItem
+                                                onClick={() =>
+                                                    handleCopy(`${form.prompt}`, "prompt", form.id)
+                                                }
+                                                className="flex justify-between items-center"
+                                            >
+                                                Copy Prompt
+                                                {copiedItem === `${form.id}-prompt` ? (
+                                                    <CopyCheck size={16} className="text-green-500" />
+                                                ) : (
+                                                    <Copy size={16} className="text-muted-foreground" />
+                                                )}
+                                            </ContextMenuItem>
                                         </ContextMenuContent>
                                     </ContextMenu>
                                 ))
@@ -110,7 +179,7 @@ const Page = () => {
                     </AccordionItem>
 
                     {/* Active Forms */}
-                    <AccordionItem value="item-2">
+                    <AccordionItem value="item-2" id="active-section">
                         <AccordionTrigger className="text-xl cursor-pointer font-medium hover:text-primary">
                             Active ({totalActiveForms})
                         </AccordionTrigger>
@@ -131,16 +200,49 @@ const Page = () => {
                                                     </div>
                                                 </ContextMenuTrigger>
                                                 <ContextMenuContent>
-                                                    <ContextMenuItem onClick={() => router.push(`/form/${form.publicId}`)}>View</ContextMenuItem>
+                                                    <ContextMenuItem onClick={() => router.push(`/form/${form.publicId}`)}>
+                                                        View
+                                                    </ContextMenuItem>
+                                                    <ContextMenuItem>Submissions</ContextMenuItem>
+
+                                                    <ContextMenuItem
+                                                        onClick={() =>
+                                                            handleCopy(JSON.stringify(form.formSchema, null, 2), "json", form._id)
+                                                        }
+                                                        className="flex justify-between items-center"
+                                                    >
+                                                        Copy JSON
+                                                        {copiedItem === `${form._id}-json` ? (
+                                                            <CopyCheck size={16} className="text-green-500" />
+                                                        ) : (
+                                                            <Copy size={16} className="text-muted-foreground" />
+                                                        )}
+                                                    </ContextMenuItem>
+
+                                                    <ContextMenuItem
+                                                        onClick={() =>
+                                                            handleCopy(`${form.prompt}`, "prompt", form._id)
+                                                        }
+                                                        className="flex justify-between items-center"
+                                                    >
+                                                        Copy Prompt
+                                                        {copiedItem === `${form._id}-prompt` ? (
+                                                            <CopyCheck size={16} className="text-green-500" />
+                                                        ) : (
+                                                            <Copy size={16} className="text-muted-foreground" />
+                                                        )}
+                                                    </ContextMenuItem>
+
+                                                    <ContextMenuItem>Delete</ContextMenuItem>
                                                 </ContextMenuContent>
                                             </ContextMenu>
                                         ))}
                                     </div>
 
+                                    {/* Pagination */}
                                     {totalPages > 1 && (
                                         <Pagination>
                                             <PaginationContent className="justify-center mt-4">
-                                                {/* Previous */}
                                                 <PaginationItem>
                                                     <PaginationPrevious
                                                         href="#"
@@ -152,7 +254,6 @@ const Page = () => {
                                                     />
                                                 </PaginationItem>
 
-                                                {/* Page Numbers */}
                                                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                                                     <PaginationItem key={pageNum}>
                                                         <PaginationLink
@@ -168,14 +269,12 @@ const Page = () => {
                                                     </PaginationItem>
                                                 ))}
 
-                                                {/* Ellipsis (if many pages) */}
                                                 {totalPages > 5 && currentPage < totalPages - 2 && (
                                                     <PaginationItem>
                                                         <PaginationEllipsis />
                                                     </PaginationItem>
                                                 )}
 
-                                                {/* Next */}
                                                 <PaginationItem>
                                                     <PaginationNext
                                                         href="#"
@@ -189,7 +288,6 @@ const Page = () => {
                                             </PaginationContent>
                                         </Pagination>
                                     )}
-
                                 </>
                             ) : (
                                 <div>You don't have any saved forms</div>

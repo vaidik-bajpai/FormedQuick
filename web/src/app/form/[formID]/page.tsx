@@ -114,6 +114,31 @@ const Page = ({ params }: { params: Promise<FormPageI> }) => {
         }
     }
 
+    const handleExport = () => {
+        if (!formSchema) {
+            toast("No form schema available to export")
+            return
+        }
+        try {
+            const dataStr = JSON.stringify(formSchema, null, 2)
+            const blob = new Blob([dataStr], { type: "application/json" })
+            const url = URL.createObjectURL(blob)
+
+            const anchor = document.createElement("a")
+            anchor.href = url
+            anchor.download = `${formID}-formSchema.json`
+            document.body.appendChild(anchor)
+            anchor.click()
+
+            document.body.removeChild(anchor)
+            URL.revokeObjectURL(url)
+
+            toast("Export initiated")
+        } catch (error) {
+            toast("Failed to export form schema")
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-screen">
@@ -166,7 +191,8 @@ const Page = ({ params }: { params: Promise<FormPageI> }) => {
                 <Button
                     variant="outline"
                     size="lg"
-                    className="bg-secondary text-secondary-foreground border-border font-medium"
+                    className="bg-secondary text-secondary-foreground border-border font-medium cursor-pointer"
+                    onClick={handleExport}
                 >
                     Export
                 </Button>
