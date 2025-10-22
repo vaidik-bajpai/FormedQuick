@@ -203,7 +203,7 @@ const Page = () => {
                                                     <ContextMenuItem onClick={() => router.push(`/form/${form.publicId}`)}>
                                                         View
                                                     </ContextMenuItem>
-                                                    <ContextMenuItem>Submissions</ContextMenuItem>
+                                                    <ContextMenuItem onClick={() => router.push(`/submissions/${form.publicId}`)}>Submissions</ContextMenuItem>
 
                                                     <ContextMenuItem
                                                         onClick={() =>

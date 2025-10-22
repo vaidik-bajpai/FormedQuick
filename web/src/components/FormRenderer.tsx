@@ -46,19 +46,29 @@ const FormRenderer = ({ formID, schema, className, readOnly }: FormRendererI) =>
         console.log("form submissions was called")
         setLoading(true)
         try {
-            const response = await axios.post(`/submissions/submit/${formID}`, {
-                ...values
-            }, {
+            const formData = new FormData()
+
+            Object.entries(values).forEach(([key, value]) => {
+                if (value instanceof FileList) {
+                    Array.from(value).forEach(file => {
+                        formData.append(key, file)
+                    })
+                } else if (value !== undefined && value !== null) {
+                    formData.append(key, String(value))
+                }
+            })
+
+            const response = await axios.post(`/submissions/submit/${formID}`, formData, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("form-gen-access-token")}`,
-                    "Content-Type": "multipart/form-data"
-                }
+                    'Content-Type': 'multipart/form-data',
+                },
             })
 
             console.log(response.data)
             setResponseSubmitted(true)
             toast("your response has been submitted")
-        } catch(err) {
+        } catch (err) {
             if (err instanceof AxiosError) {
                 const status = err.response?.status
                 switch (status) {
@@ -71,16 +81,16 @@ const FormRenderer = ({ formID, schema, className, readOnly }: FormRendererI) =>
                         toast("Form not found")
                         break
                     default:
-                        toast(err.response?.data?.message || "Failed to fetch form")
+                        toast(err.response?.data?.message || "Failed to submit form")
                 }
             } else {
-                toast("Something went wrong while fetching the form")
+                toast("Something went wrong while submitting the form")
             }
         } finally {
             setLoading(false)
         }
-        
     }
+
 
     return (
         <form
