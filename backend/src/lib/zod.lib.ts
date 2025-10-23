@@ -70,17 +70,8 @@ export const buildZodSchema = (schema: FormSchema) => {
             }
 
             case "file": {
-                // s = z.preprocess(
-                //     (val: any) => {
-                //         if (val && (val as any).files && (val as any).files.length > 0) {
-                //             return (val as any).files[0];
-                //         }
-                //         return val;
-                //     },
-                //     z.instanceof(File, { message: `${name} must be a valid file` })
-                // );
-                // if (!f.required) s = s.optional();
-                // break;
+                s = z.url({ message: `${name} must be a valid URL` });
+                if (!f.required) s = s.optional();
                 return;
             }
 

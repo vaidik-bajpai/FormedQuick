@@ -2,62 +2,57 @@ import type { Request, Response } from "express"
 import { StatusCodes } from "http-status-codes"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { ApiError } from "../utils/ApiError.js"
-import { FormSubmission } from "../models/submisstions.model.js"
+import { FormSubmission, type FieldResponse } from "../models/submisstions.model.js"
 import { Form } from "../models/forms.model.js"
 import { buildZodSchema } from "../lib/zod.lib.js"
 import z from "zod"
 import { ValidationError } from "../utils/ValidationError.js"
-
-type CloudinaryFile = Express.Multer.File & {
-    secure_url?: string
-    path?: string
-}
+import { uploadOnCloudinary } from "../services/cloudinary.services.js"
+import fs from "fs"
+import { getZodError } from "../types/zod.js"
 
 const submitForm = async (req: Request, res: Response) => {
     try {
-        const formID = req.params.formID
+        const formID = req.params.formID;
 
-        const formDoc = await Form.findOne({ publicId: formID }).lean()
-        if (!formDoc) throw new ApiError(StatusCodes.NOT_FOUND, "Form not found")
+        const formDoc = await Form.findOne({ publicId: formID }).lean();
+        if (!formDoc) throw new ApiError(StatusCodes.NOT_FOUND, "Form not found");
 
-        const formSchema = formDoc.formSchema
+        const formSchema = formDoc.formSchema;
+        const validationShape = buildZodSchema(formSchema);
+        const validationSchema = z.object(validationShape);
 
-        const validationShape = buildZodSchema(formSchema)
-        const validationSchema = z.object(validationShape)
+        console.log("req.files:", req.files);
 
-        const payload: Record<string, any> = { ...req.body }
-        const filesMap = req.files as { [fieldname: string]: CloudinaryFile[] } | undefined
+        const payload: Record<string, any> = { ...req.body };
+        const filesArr = req.files as Express.Multer.File[] | undefined;
 
-        if (filesMap) {
-            Object.entries(filesMap).forEach(([fieldname, fileArray]) => {
-                payload[fieldname] = fileArray[0] || null
-            })
-        }
-
-        const parsed = validationSchema.safeParse(payload)
-        if (!parsed.success) {
-            throw new ValidationError(StatusCodes.BAD_REQUEST, "Validation failed", parsed.error.format())
-        }
-
-        const fileUrls: Record<string, string[]> = {}
-        if (filesMap) {
-            for (const [fieldname, fileArray] of Object.entries(filesMap) as [string, CloudinaryFile[]][]) {
-                fileUrls[fieldname] = fileArray
-                    .map((file) => (file as CloudinaryFile).path ?? (file as CloudinaryFile).secure_url ?? '')
-                    .filter(Boolean)
+        let fileUrls: Record<string, string[]> = {};
+        if (filesArr && filesArr.length > 0) {
+            for (const file of filesArr) {
+                const url = await uploadOnCloudinary(file.path);
+                fileUrls[file.fieldname] = [url];
+                fs.unlinkSync(file.path);
+                payload[file.fieldname] = url;
             }
         }
 
-        console.log("Payload before validation", payload)
-        console.log("Parsed data", parsed.data)
-        console.log("Extracted file URLs", fileUrls)
+        const parsed = validationSchema.safeParse(payload);
+        if (!parsed.success) {
+            throw new ValidationError(
+                StatusCodes.BAD_REQUEST,
+                "Validation failed",
+                getZodError(parsed.error.issues)
+            );
+        }
 
+        const unifiedPayload = {...payload, ...fileUrls}
+        console.log("unifiedPayload: ", unifiedPayload)
 
-        const responses = Object.entries(parsed.data).map(([key, value]) => ({
+        const responses = Object.entries(unifiedPayload).map(([key, value]) => ({
             name: key,
-            value: value instanceof Object && ('originalname' in value) ? null : value,
-            fileUrl: fileUrls[key]?.[0],
-        }))
+            value: value
+        }));
 
         const submissionData = {
             formPublicId: formID,
@@ -65,25 +60,34 @@ const submitForm = async (req: Request, res: Response) => {
             user: req.user?._id,
             responses,
             submittedAt: new Date(),
-        }
+        };
 
-        const newSubmission = await FormSubmission.create(submissionData)
+        const newSubmission = await FormSubmission.create(submissionData);
+
+        console.log("Saved submission:", newSubmission);
 
         res.status(StatusCodes.CREATED).json(
-            new ApiResponse(StatusCodes.CREATED, "Submission saved successfully", { submissionID: newSubmission._id })
-        )
+            new ApiResponse(
+                StatusCodes.CREATED,
+                "Submission saved successfully",
+                { submissionID: newSubmission._id }
+            )
+        );
     } catch (error) {
-        console.error(error)
+        console.error(error);
         if (error instanceof ValidationError) {
             res.status(error.statusCode).json({
                 message: error.message,
                 errors: error.errors,
-            })
+            });
         } else {
-            throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Failed to save submission")
+            throw new ApiError(
+                StatusCodes.INTERNAL_SERVER_ERROR,
+                "Failed to save submission"
+            );
         }
     }
-}
+};
 
 const listSubmissions = async (req: Request, res: Response) => {
     try {
@@ -130,3 +134,4 @@ export {
     submitForm,
     listSubmissions
 }
+
