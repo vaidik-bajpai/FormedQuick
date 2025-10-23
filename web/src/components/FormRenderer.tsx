@@ -42,54 +42,64 @@ const FormRenderer = ({ formID, schema, className, readOnly }: FormRendererI) =>
         formState: { errors },
     } = form;
 
-    const onSubmit = async (values: z.infer<typeof zodSchema>) => {
-        console.log("form submissions was called")
-        setLoading(true)
+    const onSubmit = async (values: Record<string, any>) => {
+        setLoading(true);
         try {
-            const formData = new FormData()
+            const formData = new FormData();
+            console.log('[DEBUG] Schema:', schema);
+            schema.fields.forEach((field) => {
+                const { name, type } = field;
+                const value = values[name];
+                console.log(`[DEBUG] Field: ${name} | Type: ${type} | Value:`, value);
 
-            Object.entries(values).forEach(([key, value]) => {
-                if (value instanceof FileList) {
-                    Array.from(value).forEach(file => {
-                        formData.append(key, file)
-                    })
+                if (type === "file" && value) {
+                    if (value instanceof FileList || Array.isArray(value)) {
+                        if (value.length > 0) formData.append(name, value[0]);
+                    } else if (value instanceof File) {
+                        formData.append(name, value);
+                    }
                 } else if (value !== undefined && value !== null) {
-                    formData.append(key, String(value))
+                    formData.append(name, String(value));
                 }
-            })
+            });
+
+            console.log('[DEBUG] FormData keys:', Array.from(formData.keys()));
+            for (let key of formData.keys()) {
+                const val = formData.get(key);
+                console.log(`[DEBUG] FormData entry for "${key}":`, val);
+            }
 
             const response = await axios.post(`/submissions/submit/${formID}`, formData, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("form-gen-access-token")}`,
-                    'Content-Type': 'multipart/form-data',
                 },
-            })
+            });
 
-            console.log(response.data)
-            setResponseSubmitted(true)
-            toast("your response has been submitted")
+            setResponseSubmitted(true);
+            toast("your response has been submitted");
         } catch (err) {
+            console.error('[DEBUG] Submission error:', err);
             if (err instanceof AxiosError) {
-                const status = err.response?.status
+                const status = err.response?.status;
                 switch (status) {
                     case 401:
-                        toast("Unauthorized, please log in again")
-                        clearUser()
-                        router.push("/signin")
-                        break
+                        toast("Unauthorized, please log in again");
+                        clearUser();
+                        router.push("/signin");
+                        break;
                     case 404:
-                        toast("Form not found")
-                        break
+                        toast("Form not found");
+                        break;
                     default:
-                        toast(err.response?.data?.message || "Failed to submit form")
+                        toast(err.response?.data?.message || "Failed to submit form");
                 }
             } else {
-                toast("Something went wrong while submitting the form")
+                toast("Something went wrong while submitting the form");
             }
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
 
     return (
