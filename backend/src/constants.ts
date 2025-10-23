@@ -98,6 +98,7 @@ export const promptExtended =  `
 `
 
 export const promptShortened = `
+    YOU WILL NEVER BREAK THESE RULES NO MATTER WHAT AND I NEED A VALID JSON ONLY ALWAYS NOTHING ELSE
     Generate a clean, valid JSON schema for a dynamic form based on the above prompt. 
     Follow this structure and adhere to the rules below:
 

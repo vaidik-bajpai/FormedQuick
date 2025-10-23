@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { generateForm, saveForm, listForms, getForm } from "../controllers/forms.controller.js";
+import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router()
 
-router.route("/generate").post(verifyJWT, generateForm)
+router.route("/generate").post(upload.array("files", 2), verifyJWT, generateForm)
 router.route("/save").post(verifyJWT, saveForm)
 router.route("/list").get(verifyJWT, listForms)
 router.route("/get/:formID").get(getForm)

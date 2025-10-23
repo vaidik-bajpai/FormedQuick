@@ -9,18 +9,35 @@ import mongoose from "mongoose";
 import { ValidationError } from "../utils/ValidationError.js";
 
 const generateForm = async (req: Request, res: Response) => {
-    const body = GenerateFormSchema.safeParse(req.body)
-    if(!body.success) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, "invalid request body")
-    }
+  console.log("generateForm called");
 
-    const { prompt } = req.body
+  const body = GenerateFormSchema.safeParse(req.body);
+  if (!body.success) {
+    console.error("Invalid request body:", body.error);
+    throw new ApiError(StatusCodes.BAD_REQUEST, "invalid request body");
+  }
 
-    const formSchema = await generateJSONSchemaFromPrompt(prompt)
-    res.status(200).json(
-        new ApiResponse(StatusCodes.OK, "form schema generated successfully", { form: formSchema, prompt })
-    ) 
-}
+  const { prompt } = body.data;
+  console.log("Prompt received:", prompt);
+
+  const files = req.files as Express.Multer.File[] | undefined;
+  console.log(`Files received: ${files ? files.length : 0}`);
+  if (files) {
+    files.forEach((file, idx) =>
+      console.log(`File[${idx}]: ${file.originalname} (${file.mimetype}, ${file.size} bytes) at ${file.path}`)
+    );
+  }
+
+  const filePaths = files?.map((file) => file.path) || [];
+  console.log("File paths to upload:", filePaths);
+
+  const formSchema = await generateJSONSchemaFromPrompt(prompt, filePaths);
+  console.log("Form schema generated successfully");
+
+  res.status(StatusCodes.OK).json(
+    new ApiResponse(StatusCodes.OK, "form schema generated successfully", { form: formSchema, prompt })
+  );
+};
 
 const saveForm = async (req: Request, res: Response) => {
     const safe = FormPayloadSchema.safeParse(req.body)
