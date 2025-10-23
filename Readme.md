@@ -11,7 +11,7 @@ You should mimic the `.env.sample` configuration files from both your **web** an
   cp web/.env.sample web/.env
   ```
 - Open `.env` and fill in necessary environment variables such as:
-  - `NEXT_PUBLIC_API_URL` (e.g., http://localhost:4000)
+  - `NEXT_PUBLIC_API_BASE_URL`=http://localhost:8000/api/v1
   - Any other values specific to your frontend app.
 
 ### For Backend
