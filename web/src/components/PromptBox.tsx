@@ -28,7 +28,7 @@ const PromptBox = ({ onChange, placeholder, value, onSubmit }: PromptBoxI) => {
   const handleSubmit = () => {
     if (!onSubmit) return;
     onSubmit({ text: value || "", files });
-    setFiles([]); // reset files
+    setFiles([]); 
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

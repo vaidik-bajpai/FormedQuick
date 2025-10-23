@@ -25,8 +25,8 @@ const FormPreview = ({ id, schema, onClick, loading }: FormPreviewProps) => {
     const recentForms = useRecentFormsStore((state) => state.recentForms)
     const clearUser = useUserStore((state) => state.clearUser)
     const prompt = recentForms.find((form) => form.id === id)?.prompt
-    if(!prompt) {
-        return null
+    if (!prompt && !loading && !saving) {
+        return null;
     }
 
     const handleExport = () => {
@@ -126,7 +126,7 @@ const FormPreview = ({ id, schema, onClick, loading }: FormPreviewProps) => {
                             <Button
                                 size="lg"
                                 className="bg-primary text-primary-foreground font-semibold"
-                                onClick={() => handleSave(prompt, schema)}
+                                onClick={() => handleSave(prompt ?? "", schema)}
                                 disabled={saving}
                             >
                                 Save
