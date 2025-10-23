@@ -63,16 +63,69 @@ npm run dev
 
 ## Example Prompt to Generate a Form
 
-text
 
-`
+- prompt:
+```
 Create a contact form that collects the following fields:
 Full Name: required text input with a maximum length of 100 characters
 Email Address: required input validated as an email format
 Phone Number: optional text input, validated for typical phone number formats
 Message: required multi-line textarea input with a maximum length of 1000 characters
 Please return this form as a JSON schema.
-` 
+```
+
+- form schema:
+```
+{
+  "title": "Contact Us",
+  "description": "Please fill out this form to get in touch with us.",
+  "fields": [
+    {
+      "name": "fullName",
+      "label": "Full Name",
+      "type": "text",
+      "placeholder": "Enter your full name",
+      "required": true,
+      "validations": {
+        "minLength": 1,
+        "maxLength": 100
+      }
+    },
+    {
+      "name": "emailAddress",
+      "label": "Email Address",
+      "type": "email",
+      "placeholder": "your.name@example.com",
+      "required": true,
+      "validations": {
+        "regex": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      }
+    },
+    {
+      "name": "phoneNumber",
+      "label": "Phone Number",
+      "type": "text",
+      "placeholder": "e.g., +1 (555) 123-4567",
+      "required": false,
+      "validations": {
+        "maxLength": 25,
+        "regex": "^(\\+\\d{1,3}[-. ]?)?\\(?\\d{2,3}\\)?[ -. ]?\\d{3}[-. ]?\\d{4,9}$"
+      }
+    },
+    {
+      "name": "message",
+      "label": "Message",
+      "type": "textarea",
+      "placeholder": "Type your message here...",
+      "required": true,
+      "validations": {
+        "minLength": 1,
+        "maxLength": 1000
+      }
+    }
+  ]
+}
+```
 
 ----------
 
