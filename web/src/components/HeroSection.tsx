@@ -12,9 +12,9 @@ const HeroSection = () => {
   const router = useRouter();
 
   return (
-    <section className="flex flex-col md:flex-row items-center justify-between my-20 gap-12">
+    <section className="flex flex-col md:flex-row items-center justify-between gap-12 w-7xl mt-30">
       {/* Text Section */}
-      <div className="flex flex-col gap-6 max-w-xl">
+      <div className="flex flex-col gap-12 max-w-xl">
         {/* Heading Animation */}
         <motion.h1
           initial={{ opacity: 0, y: -80 }}
@@ -23,9 +23,9 @@ const HeroSection = () => {
             duration: 0.8,
             ease: "easeOut",
           }}
-          className="text-4xl md:text-5xl font-extrabold text-primary leading-tight"
+          className="text-4xl md:text-5xl font-extrabold leading-tight"
         >
-          Generate Smart, Customized Forms Instantly with AI
+          Generate Smart, <span className="text-primary/80">Customized Forms</span> Instantly with AI
         </motion.h1>
 
         <motion.p
@@ -36,29 +36,25 @@ const HeroSection = () => {
             duration: 0.7,
             ease: "easeOut",
           }}
-          className="text-foreground/80 text-lg leading-relaxed"
+          className="text-foreground/80 leading-relaxed text-xl font-medium"
         >
           Create, save, and share forms effortlessly by providing a prompt or an image.
         </motion.p>
 
-        {/* Button Animation */}
-        <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{
-            delay: 0.8,
-            type: "spring",
-            stiffness: 120,
-            damping: 12,
-          }}
-        >
+        <div className="flex gap-4">
           <Button
             onClick={() => router.push("/signup")}
-            className="w-fit !bg-primary text-primary-foreground px-8 py-3 rounded-md shadow-md hover:brightness-110 transition"
+            className="w-fit !bg-primary text-primary-foreground px-8 py-6 text-lg rounded-md shadow-md hover:brightness-110 transition"
           >
-            Get Started for Free
+            Get Started
           </Button>
-        </motion.div>
+          <Button
+            onClick={() => router.push("/signup")}
+            className="w-fit !bg-secondary text-secondary-foreground px-8 py-6 text-lg  rounded-md shadow-md hover:brightness-110 transition"
+          >
+            How it Works?
+          </Button>
+        </div>
       </div>
 
       {/* Image Section */}
@@ -70,7 +66,7 @@ const HeroSection = () => {
           duration: 0.8,
           ease: "easeOut",
         }}
-        className="max-w-lg w-full rounded-lg shadow-lg overflow-hidden p-1 bg-primary/50"
+        className="rounded-lg shadow-lg overflow-hidden p-1 bg-primary/50"
       >
         <Lens hovering={hovering} setHovering={setHovering}>
           <img
