@@ -7,7 +7,7 @@ const layout = ({
     children: React.ReactNode;
 }>) => {
     return (
-        <div className="flex flex-col min-h-screen">
+        <div className="z-50 flex flex-col min-h-screen">
             <AppHeader />
             {children}
         </div>

@@ -233,7 +233,7 @@ const Page = () => {
                                                         )}
                                                     </ContextMenuItem>
 
-                                                    <ContextMenuItem>Delete</ContextMenuItem>
+                                                    <ContextMenuItem  onClick={() => toast("unimplemented")}>Delete</ContextMenuItem>
                                                 </ContextMenuContent>
                                             </ContextMenu>
                                         ))}
